@@ -1,0 +1,28 @@
+{
+  "agent_name": "Report Export Agent",
+  "agent_id": "699fe8c29bedc057f6133c9b",
+  "description": "Generates a structured, downloadable Excel reconciliation report with all sections (matches, missing, variances) and summary totals formatted for business use.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "report_summary": "string",
+    "sections_included": "string",
+    "total_records_processed": "string",
+    "report_status": "string"
+  },
+  "example_response": {
+    "report_summary": "sample string",
+    "sections_included": "sample string",
+    "total_records_processed": "sample string",
+    "report_status": "sample string"
+  },
+  "has_module_outputs": true,
+  "module_outputs_example": {
+    "artifact_files": [
+      {
+        "file_url": "https://example.com/file.pdf"
+      }
+    ]
+  }
+}

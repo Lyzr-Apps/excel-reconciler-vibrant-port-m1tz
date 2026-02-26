@@ -1,0 +1,20 @@
+{
+  "agent_name": "Email Notification Agent",
+  "agent_id": "699fe8d1c9a21920fe89487e",
+  "description": "Sends reconciliation results summary and report via email to specified recipients after user approval.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "email_status": "string",
+    "recipient": "string",
+    "subject": "string",
+    "delivery_message": "string"
+  },
+  "example_response": {
+    "email_status": "sample string",
+    "recipient": "sample string",
+    "subject": "sample string",
+    "delivery_message": "sample string"
+  }
+}

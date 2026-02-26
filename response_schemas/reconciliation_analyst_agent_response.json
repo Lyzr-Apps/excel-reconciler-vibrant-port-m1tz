@@ -1,0 +1,26 @@
+{
+  "agent_name": "Reconciliation Analyst Agent",
+  "agent_id": "699fe8c210134bfe58ea5f8d",
+  "description": "Analyzes completed reconciliation results, summarizes key findings, highlights anomalies, patterns, and provides a narrative interpretation of matches, missing records, and variances.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "summary": "string",
+    "match_rate": "string",
+    "key_findings": "string",
+    "anomalies": "string",
+    "missing_records_analysis": "string",
+    "variance_analysis": "string",
+    "recommendations": "string"
+  },
+  "example_response": {
+    "summary": "sample string",
+    "match_rate": "sample string",
+    "key_findings": "sample string",
+    "anomalies": "sample string",
+    "missing_records_analysis": "sample string",
+    "variance_analysis": "sample string",
+    "recommendations": "sample string"
+  }
+}

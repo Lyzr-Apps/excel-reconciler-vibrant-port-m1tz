@@ -1,0 +1,33 @@
+{
+  "workflow_name": "Excel Reconciliation Hub",
+  "status": "agents_created",
+  "agents": {
+    "reconciliation_analyst": {
+      "agent_id": "699fe8c210134bfe58ea5f8d",
+      "name": "Reconciliation Analyst Agent",
+      "type": "text",
+      "model": "gpt-4.1",
+      "file_output": false
+    },
+    "report_export": {
+      "agent_id": "699fe8c29bedc057f6133c9b",
+      "name": "Report Export Agent",
+      "type": "file",
+      "model": "gpt-4.1",
+      "file_output": true
+    },
+    "email_notification": {
+      "agent_id": "699fe8d1c9a21920fe89487e",
+      "name": "Email Notification Agent",
+      "type": "text",
+      "model": "gpt-4.1",
+      "file_output": false,
+      "tools": ["GMAIL_SEND_EMAIL"]
+    }
+  },
+  "response_schemas": {
+    "reconciliation_analyst": "response_schemas/reconciliation_analyst_agent_response.json",
+    "report_export": "response_schemas/report_export_agent_response.json",
+    "email_notification": "response_schemas/email_notification_agent_response.json"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "workflow_name": "Excel Reconciliation Hub",
+  "nodes": [
+    {"id": "input_node", "type": "Input", "label": "User Input", "nodeCategory": "input"},
+    {"id": "reconciliation_analyst", "type": "Agent", "label": "Reconciliation Analyst Agent", "nodeCategory": "agent"},
+    {"id": "report_export", "type": "Agent", "label": "Report Export Agent", "nodeCategory": "agent"},
+    {"id": "email_notification", "type": "Agent", "label": "Email Notification Agent", "nodeCategory": "agent"},
+    {"id": "output_node", "type": "Output", "label": "Output", "nodeCategory": "end"}
+  ],
+  "edges": [
+    {"source": "input_node", "target": "reconciliation_analyst"},
+    {"source": "reconciliation_analyst", "target": "report_export"},
+    {"source": "report_export", "target": "email_notification"},
+    {"source": "email_notification", "target": "output_node"}
+  ],
+  "agents": [
+    {
+      "node_id": "reconciliation_analyst",
+      "agent_id": "699fe8c210134bfe58ea5f8d",
+      "name": "Reconciliation Analyst Agent",
+      "description": "Analyzes completed reconciliation results, summarizes key findings, highlights anomalies, patterns, and provides a narrative interpretation of matches, missing records, and variances.",
+      "provider_id": "openai",
+      "model": "gpt-4.1",
+      "temperature": 0.3,
+      "top_p": 1,
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": false,
+      "tool_configs": []
+    },
+    {
+      "node_id": "report_export",
+      "agent_id": "699fe8c29bedc057f6133c9b",
+      "name": "Report Export Agent",
+      "description": "Generates a structured, downloadable Excel reconciliation report with all sections (matches, missing, variances) and summary totals formatted for business use.",
+      "provider_id": "openai",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": true,
+      "tool_configs": []
+    },
+    {
+      "node_id": "email_notification",
+      "agent_id": "699fe8d1c9a21920fe89487e",
+      "name": "Email Notification Agent",
+      "description": "Sends reconciliation results summary and report via email to specified recipients after user approval.",
+      "provider_id": "openai",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": false,
+      "tool_configs": [
+        {
+          "tool_name": "gmail",
+          "tool_source": "composio",
+          "action_names": ["GMAIL_SEND_EMAIL"],
+          "persist_auth": true,
+          "server_id": "",
+          "provider_uuid": "6980d819100ddff45dec4e80"
+        }
+      ]
+    }
+  ]
+}

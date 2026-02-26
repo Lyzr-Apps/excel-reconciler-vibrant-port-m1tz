@@ -173,8 +173,17 @@ function parseCSV(text: string): RowData[] {
     headers.forEach((h, idx) => {
       const val = vals[idx] ?? ''
       const cleaned = val.replace(/[$,]/g, '')
-      const num = parseFloat(cleaned)
-      row[h] = !isNaN(num) && cleaned !== '' ? num : val
+      // Skip numeric conversion for date-like values (e.g. 2025-01-03, 01/15/2025, Jan 2025)
+      const isDateLike = /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(cleaned) ||
+        /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}$/.test(cleaned) ||
+        /^[A-Za-z]{3,9}\s+\d{1,2}/.test(cleaned) ||
+        /^\d{1,2}\s+[A-Za-z]{3,9}/.test(cleaned)
+      if (isDateLike) {
+        row[h] = val
+      } else {
+        const num = parseFloat(cleaned)
+        row[h] = !isNaN(num) && cleaned !== '' && isFinite(num) ? num : val
+      }
     })
     rows.push(row)
   }
@@ -183,7 +192,10 @@ function parseCSV(text: string): RowData[] {
 
 function detectNumericColumns(data: RowData[], columns: string[]): string[] {
   if (data.length === 0) return []
+  // Exclude columns whose names indicate dates, IDs, codes, or non-summable values
+  const nonNumericPatterns = /date|time|timestamp|created|updated|year|month|day|dob|born|expir|period|week|quarter/i
   return columns.filter(col => {
+    if (nonNumericPatterns.test(col)) return false
     let numericCount = 0
     const sample = data.slice(0, Math.min(10, data.length))
     sample.forEach(row => {

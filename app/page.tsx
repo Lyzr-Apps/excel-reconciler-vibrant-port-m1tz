@@ -1135,6 +1135,30 @@ Please review the reconciliation report for detailed findings.`
           </div>
         )}
 
+        {!file1 && !file2 && (
+          <Card className="bg-blue-50/60 backdrop-blur-md border border-blue-200/60 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-blue-900">Need test files?</p>
+                  <p className="text-xs text-blue-700">Download these sample invoice CSV files to try out the reconciliation features. They contain ~50 records each with overlapping invoices, amount variances, and missing records.</p>
+                  <div className="flex gap-2 pt-1">
+                    <a href="/test_file1_invoices.csv" download className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors">
+                      <Download className="h-3.5 w-3.5" />
+                      File 1 (50 invoices)
+                    </a>
+                    <a href="/test_file2_invoices.csv" download className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors">
+                      <Download className="h-3.5 w-3.5" />
+                      File 2 (51 invoices)
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-white/75 backdrop-blur-md shadow-md" style={{ border: '1px solid rgba(255,255,255,0.18)' }}>
             <CardHeader className="pb-3">

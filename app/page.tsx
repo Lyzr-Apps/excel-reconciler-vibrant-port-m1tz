@@ -26,7 +26,7 @@ import {
   XCircle, AlertTriangle, ChevronDown, ChevronUp, Download, Mail, Send,
   ArrowRight, ArrowUp, ArrowDown, Trash2, Info, X,
   ChevronLeft, ChevronRight, AlertCircle, Check,
-  Sparkles, Minus
+  Sparkles, Minus, ExternalLink
 } from 'lucide-react'
 
 // ============ CONSTANTS ============
@@ -702,6 +702,7 @@ export default function Page() {
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [emailOpen, setEmailOpen] = useState(false)
+  const [emailAuthUrl, setEmailAuthUrl] = useState<string | null>(null)
 
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -799,6 +800,8 @@ export default function Page() {
       setAnalysisResult(null)
       setExportResult(null)
       setEmailResult(null)
+      setEmailAuthUrl(null)
+      setEmailError(null)
     }
   }, [sampleData])
 
@@ -810,6 +813,8 @@ export default function Page() {
     setAnalysisResult(null)
     setExportResult(null)
     setEmailResult(null)
+    setEmailAuthUrl(null)
+    setEmailError(null)
 
     setTimeout(() => {
       const allNumericCols = [...new Set([
@@ -959,12 +964,35 @@ Please generate a downloadable report file with sections for matches, missing re
     setActiveAgentId(null)
   }, [reconciliationResult, file1Meta, file2Meta, selectedMatchKeys, toleranceValue, toleranceType])
 
+  // Helper: extract auth/OAuth URL from any string or object
+  const extractAuthUrl = useCallback((data: any): string | null => {
+    const searchStr = typeof data === 'string' ? data : JSON.stringify(data ?? '')
+    // Match common OAuth / auth redirect URL patterns
+    const urlPatterns = [
+      /https?:\/\/[^\s"'<>]*(?:oauth|auth|connect|accounts\.google|login)[^\s"'<>]*/gi,
+      /https?:\/\/[^\s"'<>]*(?:composio|lyzr)[^\s"'<>]*(?:auth|connect|callback)[^\s"'<>]*/gi,
+      /(https?:\/\/[^\s"'<>]+)/gi,
+    ]
+    // Try specific patterns first
+    for (let i = 0; i < urlPatterns.length - 1; i++) {
+      const match = searchStr.match(urlPatterns[i])
+      if (match && match[0]) return match[0].replace(/[",;)}\]]+$/, '')
+    }
+    // Only use generic URL pattern if the context mentions auth/connect/login
+    if (/auth|connect|login|oauth|sign.?in|authorize|permission/i.test(searchStr)) {
+      const match = searchStr.match(urlPatterns[urlPatterns.length - 1])
+      if (match && match[0]) return match[0].replace(/[",;)}\]]+$/, '')
+    }
+    return null
+  }, [])
+
   // Agent: Send email
   const handleSendEmail = useCallback(async () => {
     if (!emailForm.recipient || !reconciliationResult) return
     setEmailLoading(true)
     setEmailError(null)
     setEmailResult(null)
+    setEmailAuthUrl(null)
     setActiveAgentId(EMAIL_NOTIFICATION_AGENT_ID)
 
     const s = reconciliationResult.summaryTotals
@@ -992,7 +1020,23 @@ Please review the reconciliation report for detailed findings.`
 
     try {
       const result = await callAIAgent(message, EMAIL_NOTIFICATION_AGENT_ID)
-      if (result.success) {
+
+      // Check for auth/OAuth URL in any part of the response
+      const rawStr = JSON.stringify(result ?? '')
+      const hasAuthKeyword = /auth|oauth|connect|login|authorize|permission|sign.?in|account.?link/i.test(rawStr)
+
+      if (hasAuthKeyword) {
+        const authUrl = extractAuthUrl(result)
+        if (authUrl) {
+          setEmailAuthUrl(authUrl)
+          setEmailError('Gmail account is not connected. Please click the button below to authorize Gmail access, then try sending again.')
+          setEmailLoading(false)
+          setActiveAgentId(null)
+          return
+        }
+      }
+
+      if (result.success && result.response?.status === 'success') {
         const data = result?.response?.result
         setEmailResult({
           email_status: data?.email_status ?? 'sent',
@@ -1001,7 +1045,19 @@ Please review the reconciliation report for detailed findings.`
           delivery_message: data?.delivery_message ?? 'Email sent successfully.',
         })
       } else {
-        setEmailError(result?.response?.message ?? 'Email sending failed. Please try again.')
+        // Check if the error message itself contains an auth URL
+        const errorMsg = result?.response?.message ?? result?.error ?? ''
+        const authUrl = extractAuthUrl(errorMsg)
+        if (authUrl) {
+          setEmailAuthUrl(authUrl)
+          setEmailError('Gmail account is not connected. Please click the button below to authorize Gmail access, then try sending again.')
+        } else {
+          setEmailError(
+            typeof errorMsg === 'string' && errorMsg.length > 0
+              ? errorMsg
+              : 'Email sending failed. Make sure your Gmail account is connected in Lyzr Studio and try again.'
+          )
+        }
       }
     } catch (err) {
       setEmailError(err instanceof Error ? err.message : 'Email sending failed.')
@@ -1009,7 +1065,7 @@ Please review the reconciliation report for detailed findings.`
 
     setEmailLoading(false)
     setActiveAgentId(null)
-  }, [emailForm, reconciliationResult, file1Meta, file2Meta, selectedMatchKeys])
+  }, [emailForm, reconciliationResult, file1Meta, file2Meta, selectedMatchKeys, extractAuthUrl])
 
   // Sorting helper
   const handleSort = useCallback((key: string) => {
@@ -1699,10 +1755,30 @@ Please review the reconciliation report for detailed findings.`
                 </div>
 
                 {emailError && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>{emailError}</span>
-                    <Button variant="ghost" size="sm" className="ml-auto h-6 px-2" onClick={() => setEmailError(null)}><X className="h-3 w-3" /></Button>
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1">{emailError}</span>
+                      <Button variant="ghost" size="sm" className="h-6 px-2 flex-shrink-0" onClick={() => { setEmailError(null); setEmailAuthUrl(null) }}><X className="h-3 w-3" /></Button>
+                    </div>
+                    {emailAuthUrl && (
+                      <a
+                        href={emailAuthUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Connect Gmail Account
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {!emailError && !emailResult && !emailAuthUrl && (
+                  <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs">
+                    <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <p>Gmail must be connected to send emails. If this is your first time, click &quot;Send Notification&quot; and follow the authorization link that appears to connect your Gmail account.</p>
                   </div>
                 )}
 
